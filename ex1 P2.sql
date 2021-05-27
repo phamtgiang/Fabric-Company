@@ -1,0 +1,105 @@
+DELIMITER //
+CREATE PROCEDURE ADD_EMP_ACC
+(
+	_USERNAME		VARCHAR(100),
+	_DPASSWORD		VARCHAR(100),
+	_FNAME			VARCHAR(15),
+	_MINIT			CHAR,
+	_LNAME			VARCHAR(15),
+	_ID				CHAR(15),
+	_BIRTHDAY		DATE,
+	_ADDRESS		VARCHAR(100),
+	_SEX			CHAR,
+	_SALARY 		DECIMAL(10,2),
+    _PHONENUMBER	INT,
+    _MANAGER_ID		CHAR(15)
+)
+BEGIN
+
+	IF EXISTS ( SELECT * FROM EMPLOYEE_ACC WHERE ID = _ID) THEN 
+		SELECT 'That id is taken . Try another .' ;
+	ELSEIF EXISTS ( SELECT * FROM EMPLOYEE_ACC WHERE USERNAME = _USERNAME ) THEN
+		SELECT 'That username is taken . Try another . ' ;
+	ELSEIF CHARACTER_LENGTH(_USERNAME) < 4  THEN
+		SELECT 'That username is not available , must be longer than 3 character .' ;
+	ELSEIF CHARACTER_LENGTH(_DPASSWORD) < 4  THEN
+		SELECT 'That password is not available , must be longer than 3 character .' ;
+	ELSEIF MID(_PHONENUMBER,0 , 1) != 0 THEN
+		SELECT 'That phone number is not available , must be start by 0 .' ;
+	ELSE INSERT INTO EMPLOYEE_ACC
+		(USERNAME,DPASSWORD,FNAME,MINIT,LNAME,ID,BIRTHDAY,ADDRESS,SEX,SALARY,PHONENUMBER,MANAGER_ID)
+		 VALUES (_USERNAME,_DPASSWORD,_FNAME,_MINIT,_LNAME,_ID,_BIRTHDAY,_ADDRESS,_SEX,_SALARY,_PHONENUMBER,_MANAGER_ID);
+	END IF ;	 
+
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE UPDATE_EMP_USER_PASS
+(
+    _USERNAME		VARCHAR(100),
+	_DPASSWORD		VARCHAR(100),
+	_ID				CHAR(15)
+)
+BEGIN
+
+	IF EXISTS ( SELECT * FROM EMPLOYEE_ACC WHERE ID = _ID ) THEN
+       IF CHARACTER_LENGTH(_USERNAME) < 4 AND NOT ISNULL(_USERNAME) THEN
+			SELECT 'Username for updating is not available , length of username must be longer than 3 character .';
+	   ELSEIF CHARACTER_LENGTH(_DPASSWORD) < 4 AND NOT ISNULL(_DPASSWORD) THEN
+			SELECT 'Password for updating is not available , length of password must be longer than 3 character .';
+	   ELSEIF EXISTS ( SELECT * FROM EMPLOYEE_ACC WHERE USERNAME = _USERNAME AND DPASSWORD = _DPASSWORD ) THEN
+			SELECT 'No any changed' ;
+	   ELSE 
+			IF ISNULL(_DPASSWORD) THEN 
+				UPDATE EMPLOYEE_ACC
+				SET 
+					USERNAME = _USERNAME
+				WHERE
+					ID = _ID;
+			ELSEIF ISNULL(_USERNAME) THEN
+				UPDATE EMPLOYEE_ACC
+				SET 
+					DPASSWORD = _DPASSWORD
+				WHERE
+					ID = _ID;
+            
+            ELSE
+				UPDATE EMPLOYEE_ACC
+				SET 
+					USERNAME = _USERNAME,
+                    DPASSWORD = _DPASSWORD
+				WHERE
+					ID = _ID;
+			END IF;
+            
+	   END IF ;
+	ELSE 
+		SELECT 'No available account .';
+	END IF;
+END //
+DELIMITER ;
+
+
+DELIMITER //-
+CREATE PROCEDURE DELETE_EMP_ACC 
+( _ID	CHAR(15) )
+
+BEGIN
+
+	IF NOT EXISTS ( SELECT * FROM EMPLOYEE_ACC WHERE ID = _ID) THEN 
+		SELECT 'Employee is not available . Can not find any available id of employee .' ;
+	ELSE
+		DELETE FROM EMPLOYEE_ACC WHERE ID = _ID ;
+	END IF ;	 
+
+END //
+DELIMITER ;
+
+
+DROP PROCEDURE ADD_EMP_ACC;
+DROP PROCEDURE UPDATE_EMP_USER_PASS;
+DROP PROCEDURE DELETE_EMP_ACC;
+CALL ADD_EMP_ACC('idolhat','password1','Giang', 'T', 'Pham', '3500025', '2000-03-06', '650 Dallas, Houston, TX', 'M', 500 , 0941292933,'350002');
+CALL UPDATE_EMP_USER_PASS('coolboy',NULL,'3500025');
+CALL DELETE_EMP_ACC('3500025');
